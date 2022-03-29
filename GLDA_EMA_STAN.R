@@ -529,11 +529,11 @@ fit_rstan_moms_movie <- stan(
   warmup = 200    # default is half of iter
 )
 
-saveRDS(fit_rstan_moms_movie, "fit_rstan_moms_movie_centered.rds") # converges 
+fit_rstan <- readRDS("fit_rstan_moms_movie_centered.rds")
+# saveRDS(fit_rstan_moms_movie, "fit_rstan_moms_movie_centered.rds") # converges 
 # saveRDS(fit_rstan_moms_movie, "fit_rstan_moms_movie_transformed.rds") # does not converge
 # saveRDS(fit_rstan_moms_movie, "fit_rstan_moms_movie.rds") # does not converge
-
-fit_rstan <- fit_rstan_moms_movie
+# fit_rstan <- fit_rstan_moms_movie
 
 rstan::traceplot(fit_rstan, pars = paste('mu[', 1:3, ',2]', sep = ''), inc_warmup = T) # check convergence, should converge after warmup ends
 
@@ -544,7 +544,8 @@ theta <- apply(extract(fit_rstan)$theta[1:800, ,], c(2,3), mean)
 mu <- apply(extract(fit_rstan)$mu[1:800, ,], c(2,3), mean) 
 sigma <- apply(extract(fit_rstan)$sigma[1:800, , ,], c(2,3,4), mean) # 3 by 10 by 10
 
-theta
+theta.glda <- as.data.frame(theta) %>% mutate(low = V2, med = V3, high = V1, pid = unique(moms.movie.hourly.centered$pid)) %>% select(pid, low, med, high) 
+theta.glda
 
 mu.for.plot <- as.data.frame(t(mu)) %>% `colnames<-`(c("K=1", "K=2", "K=3")) %>% 
   mutate(cluster = 1:8) %>% gather(cluster) %>% mutate(item = rep(1:8, 3))
@@ -556,6 +557,14 @@ ggplot(mu.for.plot, aes(x = item, y = value, color = cluster)) + theme_bw() +
   # scale_color_discrete(name = "cluster", limits = c("high", "low", "med")) +
   theme(panel.grid.minor.x = element_blank(), 
         axis.text=element_text(size=12), axis.title.x=element_text(size=14,face="bold"), axis.title.y=element_text(size=14))
+
+epds <- read.csv(paste0(data.path.kaya, "EPDS_moms.csv"))
+
+theta.truth <- epds %>% mutate(pid = substr(PID, 1, 3), epds = EPDS) %>% select(pid, epds) %>% inner_join(theta.glda, by = "pid")
+
+summary(lm("epds~ high", data = theta.truth)) # not at all significant
+summary(lm("epds~ med", data = theta.truth)) # not at all significant
+summary(lm("epds~ low", data = theta.truth)) # not at all significant
 
 # Compare with vanilla Gaussian Mixture Models
 
@@ -578,8 +587,6 @@ ggplot(mu.df, aes(x = as.numeric(index), y = value, color = cluster)) + theme_bw
 
 theta.gmm <- moms.movie.hourly.centered %>% mutate(cluster = gmm.moms$classification) %>% group_by(pid) %>%
   summarize(K1 = length(which(cluster == 1))/n(), K2 = length(which(cluster == 2))/n(), K3 = length(which(cluster == 3))/n()) %>% as.data.frame()
-
-theta.glda <- as.data.frame(theta) %>% mutate(K1 = V2, K2 = V3, K3 = V1) %>% select(K1, K2, K3)
 
 cor(theta.glda$K1, theta.gmm$K1) # very high correlation
 cor(theta.glda$K2, theta.gmm$K2) # very high correlation 

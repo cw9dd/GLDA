@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1568396610538.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "F1857ABB",
+    "lastKnownWriteTime" : 3328195524673024032,
+    "last_content_update" : 1568396610538,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "5CFA1AA8",
+        "caption" : "dat",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=dat&cache_key=5CFA1AA8",
+        "displayedObservations" : 45,
+        "environment" : "",
+        "object" : "dat",
+        "preview" : 0,
+        "totalObservations" : 45,
+        "variables" : 123
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

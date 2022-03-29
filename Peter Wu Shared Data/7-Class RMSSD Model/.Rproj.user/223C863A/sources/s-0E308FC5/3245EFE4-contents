@@ -1,0 +1,82 @@
+
+library(ggplot2)
+
+pdf('Class 5 Histogram.pdf')
+hist(dat$cl5rate[dat$cl5 == 1], xlab = 'Class 5 Rate', main = '')
+dev.off()
+
+pdf('Class 5 & HR Histogram.pdf')
+hist(dat$cl5hr[dat$cl5 == 1], xlab = 'Correlation of Class 5 & HR', main = '')
+dev.off()
+
+mean(dat$cl5hr[dat$cl5 == 1]) # 0.53
+
+pdf('Class 5 w HR Slope.pdf')
+plot(dat$hrslope ~ dat$cl5slope, xlab = 'Class 5 Slope', ylab = 'HR Slope')
+abline(lm(dat$hrslope ~ dat$cl5slope), col="red") # regression line (y~x)
+dev.off()
+
+pdf('Cl5 & HR cor by Cl5 Rate.pdf')
+plot(dat$cl5hr ~ dat$cl5rate, xlab = 'Class 5 Rate', ylab = 'Cor of Class 5 & HR')
+abline(lm(dat$cl5hr ~ dat$cl5rate), col="red") # regression line (y~x)
+dev.off()
+
+pdf('Cl5 & HR cor by HR SD.pdf')
+plot(dat$cl5hr ~ dat$sdhr, xlab = 'Heart Rate SD', ylab = 'Cor of Class 5 & HR')
+abline(lm(dat$cl5hr ~ dat$sdhr), col="red") # regression line (y~x)
+dev.off()
+
+
+dat$class5 = as.factor(ifelse(dat$cl5 == 1, 'Present', 'Absent'))
+pdf('Cor of HR & RSA by Class 5.pdf')
+ggplot(dat, aes(x=hrrsa, fill=class5)) +
+  labs(y='Density')+labs(x='Correlation of HR & RSA')+ggtitle("")+
+  geom_density(alpha = 0.4)
+dev.off()
+
+plot(dat$hrrsa ~ dat$cl5, xlab = 'Heart Rate SD', ylab = 'Cor of Class 5 & HR')
+
+
+
+library(sjPlot)
+library(sjmisc)
+library(ggplot2)
+data(dat)
+theme_set(theme_sjplot())
+
+# make categorical
+#dat$class5 = as.factor(ifelse(dat$cl5 == 1, 'Present', 'Absent'))
+
+# fit model with interaction
+fit <- lm(hrslope ~ rsaslope*class5 + clinical, data = dat)
+plot_model(fit, type = "pred", terms = c("rsaslope", "class5"))
+
+pdf('HR Slope on RSA Slope by Class 5.pdf')
+plot_model(fit, type = "pred", terms = c("rsaslope", "class5"))
+dev.off()
+
+
+
+
+
+
+
+
+
+#Create objects for defining means and medians
+library(plyr)
+#cdatH <- ddply(densH, "Data", summarise, cor.mean=mean(Correlation),cor.median=median(Correlation))
+#cdatL <- ddply(densL, "Data", summarise, cor.mean=mean(Correlation),cor.median=median(Correlation))
+cdatHres <- ddply(denseHres, "Data", summarise, cor.mean=mean(Correlation),cor.median=median(Correlation))
+cdatLres <- ddply(denseLres, "Data", summarise, cor.mean=mean(Correlation),cor.median=median(Correlation))
+
+#Density plot for intra (n=535) vs. inter (n=85), raw data Low Arousal NA/PA
+ggplot(densL,aes(Correlation,fill=Data))+geom_density(alpha=0.3,size=.5)+scale_fill_manual( values = c("blue","red"))+
+  labs(y='Density')+labs(x='')+ggtitle("Low-Arousal PA & NA")+
+  theme(legend.position="none",plot.title = element_text(hjust = 0.5,size=20,face='bold'),axis.title.y = element_text(face="bold",size=20),
+        axis.text.y  = element_text(size=20),axis.text.x = element_text(size=20))+ylim(0,6)+
+  scale_x_continuous(limits=c(-1, .3))+
+  geom_vline(data=cdatL, aes(xintercept=cor.mean,  colour=Data), linetype="solid", size=1,col=c("blue","red"))+
+  geom_vline(data=cdatL, aes(xintercept=cor.median,  colour=Data), linetype="dashed", size=1,col=c("blue","red"))+
+  annotate('text',x=-.88,y=4.5,label="SD = .07",col="blue",size=7.5)+
+  annotate('text',x=-.10,y=1.1,label="SD = .21",col="red",size=7.5)

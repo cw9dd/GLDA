@@ -1,0 +1,31 @@
+{
+    "id": "ED2020C8",
+    "path": null,
+    "project_path": null,
+    "type": "r_dataframe",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1565660736362.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "cacheKey": "9D4463DC",
+        "caption": "data",
+        "contentUrl": "grid_resource/gridviewer.html?env=&obj=data&cache_key=9D4463DC",
+        "displayedObservations": 127,
+        "environment": "",
+        "object": "data",
+        "preview": 0,
+        "totalObservations": 127,
+        "variables": 28
+    },
+    "folds": "",
+    "lastKnownWriteTime": 544134592,
+    "encoding": "",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1565660736362,
+    "read_only": false,
+    "read_only_alternatives": []
+}

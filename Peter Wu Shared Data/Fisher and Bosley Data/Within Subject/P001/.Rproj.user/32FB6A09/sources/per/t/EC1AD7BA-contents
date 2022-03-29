@@ -1,0 +1,394 @@
+
+
+#############################################
+##########     Fisher & Bosley     ##########
+##########        Revision         ##########
+#############################################
+
+#################################################################
+##################   LIBRARIES AND FUNCTIONS ####################
+#################################################################
+rm(list=ls())
+lagpad <- function(x, k) {
+  c(rep(NA, k), x)[1 : length(x)] 
+}
+
+library(psych)
+library(glmnet)
+library(Hmisc)
+library(fmsb)
+library(DataCombine)
+library(tidyLPA)
+library(tidyverse)
+library(dplyr)
+library(mclust)
+library(mgm)
+library(qgraph)
+library(pROC)
+
+#See external .R files for 'beepday2consec' and 'lagData' functions
+#Taken from mgm mvar internal code
+
+#################################################################
+##################  DATA SETUP AND CLEANING #####################
+#################################################################
+
+#Read in data
+data=read.csv('dat.csv',as.is=TRUE)
+data = data[,2:29]
+
+#Rename
+colnames(data) <- c("start","finish","energetic","enthusiastic","content","irritable","restless","worried","guilty","afraid","anhedonia","angry","hopeless","down","positive","fatigue","tension","concentrate","accepted","threatened","ruminate","avoid_act","reassure","procrast","hours","difficult","unsatisfy","avoid_people")
+
+#Duplicate and lag time
+data$lag=lagpad(data$start,1)
+
+#Calculate time differences
+data$tdif=as.numeric(difftime(strptime(data$start,"%m/%d/%Y %H:%M"),strptime(data$lag,"%m/%d/%Y %H:%M")))
+
+#Replace NA
+data$tdif[is.na(data$tdif)]<- 0
+
+#Calculate cumulative sum of numeric elapsed time
+data$cumsumT=cumsum(data$tdif)
+
+# how many obs, and how many are complete
+nrow(data)
+length(which(complete.cases(data[,3])))
+
+#Trim time series to even 4obs/day
+#first visualize and determine where to trim.
+options(width=90)
+data$start
+dati=data
+dati$start
+length(which(complete.cases(dati[,3])))
+
+#Use for internal missing rows: add a row where it's missing
+new <- rep(NA, length(dati))
+dati <- InsertRow(dati, NewRow=new, RowNum = 1)
+dati <- InsertRow(dati, NewRow=new, RowNum = 2)
+dati <- InsertRow(dati, NewRow=new, RowNum = 5)
+dati <- InsertRow(dati, NewRow=new, RowNum = 13)
+dati$start
+
+#Code days of the week
+dati$day <- rep(1:7, each=4, length.out=nrow(dati))
+# 1 = Tuesday
+dati$mon=ifelse(dati$day==7,1,0)
+dati$tues=ifelse(dati$day==1,1,0)
+dati$wed=ifelse(dati$day==2,1,0)
+dati$thur=ifelse(dati$day==3,1,0)
+dati$fri=ifelse(dati$day==4,1,0)
+dati$sat=ifelse(dati$day==5,1,0)
+dati$sun=ifelse(dati$day==6,1,0)
+
+#Code pings
+dati$ping=seq(0,3,1)
+dati$morning=ifelse(dati$ping==0,1,0)
+dati$midday=ifelse(dati$ping==1,1,0)
+dati$eve=ifelse(dati$ping==2,1,0)
+dati$night=ifelse(dati$ping==3,1,0)
+datx=dati
+
+#Temporal variables
+datx$linear=scale(datx$cumsumT)
+datx$quad=datx$linear^2
+datx$cub=datx$linear^3
+datx$cosT=cos(((2*pi)/24)*datx$cumsumT)
+datx$sinT=sin(((2*pi)/24)*datx$cumsumT)
+datx$cos2T=cos(((2*pi)/12)*datx$cumsumT)
+datx$sin2T=sin(((2*pi)/12)*datx$cumsumT)
+datx$cosW=cos(((2*pi)/168)*datx$cumsumT)
+datx$sinW=sin(((2*pi)/168)*datx$cumsumT)
+
+#Index consecutive measurements by ping and day
+datx$dayvar=rep(1:(nrow(datx)/4),each=4)
+datx$beepvar=datx$ping+1
+
+#Create filter to mark cases with missing data
+datx$filter=ifelse(!complete.cases(datx[,c(3:24)]),1,0)
+
+## Remove NAs, suppress row names
+daty=subset(datx,filter==0)
+row.names(daty)<- NULL
+View(daty)
+
+########################################################################
+##################  Gaussian Finite Mixture Model  #####################
+##################    (Latent Profile Analysis)    #####################
+########################################################################
+
+clustdat <- as.data.frame(scale(daty[, c(6,12,10,8,21,14,13,11,22,28)]))
+colnames(clustdat)<- c("Irritable", "Angry", "Afraid", "Worried", "Ruminating", "Down", "Hopeless", "Anhedonic", "Avoid_Act", "Avoid_People")
+
+#Run models with up to 3 classes, equal and varying variances
+clustdat %>%
+  select(Irritable, Angry, Afraid, Worried, Ruminating, Down, Hopeless, Anhedonic, Avoid_Act, Avoid_People) %>%
+  estimate_profiles(1:3, 
+                    variances = c("equal", "varying"),
+                    covariances = c("zero", "zero")) %>%
+  compare_solutions(statistics = c("BIC", "ICL"))
+
+#Model with 3 classes was best-fit, examine further
+clustdat %>%
+  select(Irritable, Angry, Afraid, Worried, Ruminating, Down, Hopeless, Anhedonic, Avoid_Act, Avoid_People) %>%
+  single_imputation() %>%
+  estimate_profiles(3:6, 
+                    variances = c("equal", "varying"),
+                    covariances = c("zero", "zero")) %>%
+  compare_solutions(statistics = c("BIC", "ICL"))
+
+#Final model is rerun and saved as an object
+mod=clustdat %>%
+  select(Irritable, Angry, Afraid, Worried, Ruminating, Down, Hopeless, Anhedonic, Avoid_Act, Avoid_People) %>%
+  estimate_profiles(5, 
+                    variances = "equal",
+                    covariances = "zero")
+#Model fit
+get_fit(mod)
+#Model data and estimates
+x=get_data(mod)
+y=get_estimates(mod)
+View(x)
+View(y)
+
+#Plot of all 10 profiles
+plot_profiles(mod)
+
+#Extract means by class for symptoms/behaviors
+means <- data.frame(y[y[,1]=='Means',c(2,6,3)])
+means$Class=as.factor(means$Class)
+
+#Plot profiles
+pdf('p001_5class.pdf')
+means%>%
+  ggplot(aes(Parameter, Estimate, group = Class, color = Class)) +
+  geom_point(size = 2.25) +
+  geom_line(size = 1.25) +
+  scale_x_discrete(limits = c("Irritable", "Angry", "Afraid", "Worried", "Ruminating", "Down", "Hopeless", "Anhedonic", "Avoid_Act", "Avoid_People")) +
+  labs(x = NULL, y = "Z-score") +
+  theme_bw(base_size = 14) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "top")
+dev.off()
+
+length(which(x$Class==1))/length(x$Class) #10.95%
+length(which(x$Class==2))/length(x$Class) #14.60%
+length(which(x$Class==3))/length(x$Class) #40.88%
+length(which(x$Class==4))/length(x$Class) #18.25%
+length(which(x$Class==5))/length(x$Class) #15.33%
+
+################################################################################################
+##################      Mixed Vector Autoregressive Model (mVAR)            ####################
+##################   via elastic-net regularized Generalized Linear Model   ####################
+################################################################################################
+
+#Consecutive measurements
+beepvar=daty$ping+1
+dayvar=daty$dayvar
+
+#Create dichotomous class variables
+x$class1=ifelse(x$Class==1,1,0)
+x$class2=ifelse(x$Class==2,1,0)
+x$class3=ifelse(x$Class==3,1,0)
+x$class4=ifelse(x$Class==4,1,0)
+x$class5=ifelse(x$Class==5,1,0)
+
+#Run mVAR
+set.seed(1234)
+var5=mvar(x[,19:23], type=c("c", "c", "c", "c", "c"), level=c(2, 2, 2, 2, 2), lamdaSel="EBIC",
+          lags=1, beepvar=beepvar, dayvar=dayvar, alphaSeq=1, binarySign = TRUE, overparameterize = TRUE)
+
+qgraph(t(var5$wadj[, , 1]),edge.color = t(var5$edgecolor[, , 1]))
+
+pdf('p001_mVAR.pdf')
+qgraph(t(var5$wadj[, , 1]),edge.color = t(var5$edgecolor[, , 1]))
+dev.off()
+
+#########################################################################
+################### Elastic Net Regression Models  ######################
+#########################################################################
+
+#Add classes to data frame
+daty$class=x$Class
+daty$class1=x$class1
+daty$class2=x$class2
+daty$class3=x$class3
+daty$class4=x$class4
+daty$class5=x$class5
+
+#Now we create separate lag0 (contemporaneous) and lag1 (lagged) data structures
+#Functions 'beepday2consec' and 'lagData' taken from mgm mvar internal code
+
+#Uses beepvar and dayvar info to index consecutive measurements
+daty$consec <- beepday2consec(beepvar = beepvar, dayvar = dayvar)
+
+#Object with original and lagged data
+data_lagged <- lagData(data = daty, 
+                       lags = 1, 
+                       consec = daty$consec)
+
+#Original & lagged data
+data_response <- data_lagged$data_response
+l_data_lags <- data_lagged$l_data_lags
+#n_design <- nrow(data_response) #used in other mvar calculations
+
+# delete rows that cannot be predicted
+data_response <- data_response[data_lagged$included, ]
+l_data_lags <- lapply(l_data_lags, function(x) x[data_lagged$included, ])
+
+#Original dat, with appropriate rows for lagged analysis (L0 = lag zero)
+datyL0=as.data.frame(data_response)
+
+#Lagged data (L1 = lag one)
+datyL1=as.data.frame(l_data_lags[[1]])
+
+#Change column names of lagged data
+colnames(datyL1)<-colnames(daty)
+
+#Recode variables as numeric (via character)
+datyL0[,c(3:31,45:53)] <- sapply(datyL0[,c(3:31,45:53)], as.character)
+datyL0[,c(3:31,45:53)] <- sapply(datyL0[,c(3:31,45:53)], as.numeric)
+datyL1[,c(3:31,45:53)] <- sapply(datyL1[,c(3:31,45:53)], as.character)
+datyL1[,c(3:31,45:53)] <- sapply(datyL1[,c(3:31,45:53)], as.numeric)
+
+#Inspect data
+View(datyL0)
+View(datyL1)
+
+## Training/Testing ##
+## 50% of the sample size
+smp_size <- floor(0.5 * nrow(datyL1))
+
+#Create random sets of 50% each
+##set the seed to make your partition reproducible
+set.seed(1234)
+train_ind <- sample(seq_len(nrow(datyL1)), size = smp_size)
+
+#Training and testing sets
+trainL0 <- datyL0[train_ind, ]
+testL0 <- datyL0[-train_ind, ]
+trainL1 <- datyL1[train_ind, ]
+testL1 <- datyL1[-train_ind, ]
+
+#Prediction variables for regression models (training/testing)
+#Prediction matrices (feature space)
+#Vars from datyL1 are lagged, vars from datyL0 are contemporaneous with DV
+#All predictor variables
+matL1.1 = data.matrix(cbind(trainL1[,c(3:24,28,58:59)],trainL0[,c(33:39,42:53)]))
+matL1.2 = data.matrix(cbind(testL1[,c(3:24,28,58:59)],testL0[,c(33:39,42:53)]))
+#Psychosocial variables + time variables
+matL2.1 = data.matrix(cbind(trainL1[,c(3:24,28)],trainL0[,c(33:39,42:53)]))
+matL2.2 = data.matrix(cbind(testL1[,c(3:24,28)],testL0[,c(33:39,42:53)]))
+#Lagged class + time
+matL3.1 = data.matrix(cbind(trainL1[,c(58:59)],trainL0[,c(33:39,42:53)]))
+matL3.2 = data.matrix(cbind(testL1[,c(58:59)],testL0[,c(33:39,42:53)]))
+
+##############################
+########  Class 1  ###########
+##############################
+
+set.seed(1234)
+regL1=cv.glmnet(matL2.1,trainL0$class1,family='binomial',standardize=T,alpha=.5)
+coefL1=coef(regL1, s = "lambda.min")
+coefL1
+
+predL1=predict.cv.glmnet(regL1, newx=matL2.2, s = "lambda.min", type = "link")
+testL0$regpred1=as.numeric(predL1)
+pROC::auc(pROC::roc(testL0$class1~testL0$regpred1))
+#0.59
+pROC::coords((pROC::roc(testL0$class1~testL0$regpred1)),"best", ret=c("threshold", "specificity", "sensitivity"))
+#  threshold specificity sensitivity 
+# -2.6130043   0.6829268   0.6666667
+pred.prob1 <- predict.cv.glmnet(regL1, newx=matL2.2, s = "lambda.min", type = "response")
+brierScore1 <- mean((pred.prob1-as.numeric(as.character(testL0$class1)))^2)
+brierScore1
+#0.097
+
+##############################
+########  Class 2  ###########
+##############################
+
+set.seed(1234)
+regL2=cv.glmnet(matL2.1,trainL0$class2,family='binomial',standardize=T,alpha=.0)
+coefL2=coef(regL2, s = "lambda.min")
+coefL2
+
+predL2=predict.cv.glmnet(regL2, newx=matL2.2, s = "lambda.min", type = "link")
+testL0$regpred2=as.numeric(predL2)
+pROC::auc(pROC::roc(testL0$class2~testL0$regpred2))
+#0.50
+pROC::coords((pROC::roc(testL0$class2~testL0$regpred2)),"best", ret=c("threshold", "specificity", "sensitivity"))
+#  threshold specificity sensitivity 
+#
+pred.prob2 <- predict.cv.glmnet(regL2, newx=matL2.2, s = "lambda.min", type = "response")
+brierScore2 <- mean((pred.prob2-as.numeric(as.character(testL0$class2)))^2)
+brierScore2
+#0.136
+
+##############################
+########  Class 3  ###########
+##############################
+
+set.seed(1234)
+regL3=cv.glmnet(matL2.1,trainL0$class3,family='binomial',standardize=T,alpha=.5)
+coefL3=coef(regL3, s = "lambda.min")
+coefL3
+
+predL3=predict.cv.glmnet(regL3, newx=matL2.2, s = "lambda.min", type = "link")
+testL0$regpred3=as.numeric(predL3)
+pROC::auc(pROC::roc(testL0$class3~testL0$regpred3))
+#0.63
+pROC::coords((pROC::roc(testL0$class3~testL0$regpred3)),"best", ret=c("threshold", "specificity", "sensitivity"))
+#  threshold specificity sensitivity 
+# -0.1965416   0.8750000   0.4500000
+pred.prob3 <- predict.cv.glmnet(regL3, newx=matL2.2, s = "lambda.min", type = "response")
+brierScore3 <- mean((pred.prob3-as.numeric(as.character(testL0$class3)))^2)
+brierScore3
+#0.239
+
+##############################
+########  Class 4  ###########
+##############################
+
+set.seed(1234)
+regL4=cv.glmnet(matL2.1,trainL0$class4,family='binomial',standardize=T,alpha=.005)
+coefL4=coef(regL4, s = "lambda.min")
+coefL4
+
+predL4=predict.cv.glmnet(regL4, newx=matL2.2, s = "lambda.min", type = "link")
+testL0$regpred4=as.numeric(predL4)
+pROC::auc(pROC::roc(testL0$class4~testL0$regpred4))
+#0.73
+pROC::coords((pROC::roc(testL0$class4~testL0$regpred4)),"best", ret=c("threshold", "specificity", "sensitivity"))
+#  threshold specificity sensitivity 
+# -0.9771258   0.5714286   0.8888889
+pred.prob4 <- predict.cv.glmnet(regL4, newx=matL2.2, s = "lambda.min", type = "response")
+brierScore4 <- mean((pred.prob4-as.numeric(as.character(testL0$class4)))^2)
+brierScore4
+#0.166
+
+##############################
+########  Class 5  ###########
+##############################
+
+set.seed(1234)
+regL5=cv.glmnet(matL2.1,trainL0$class5,family='binomial',standardize=T,alpha=.01)
+coefL5=coef(regL5, s = "lambda.min")
+coefL5
+
+predL5=predict.cv.glmnet(regL5, newx=matL2.2, s = "lambda.min", type = "link")
+testL0$regpred5=as.numeric(predL5)
+pROC::auc(pROC::roc(testL0$class5~testL0$regpred5))
+#0.83
+pROC::coords((pROC::roc(testL0$class5~testL0$regpred5)),"best", ret=c("threshold", "specificity", "sensitivity"))
+#  threshold specificity sensitivity 
+# -1.9860728   0.6666667   1.0000000
+pred.prob5 <- predict.cv.glmnet(regL5, newx=matL2.2, s = "lambda.min", type = "response")
+brierScore5 <- mean((pred.prob5-as.numeric(as.character(testL0$class5)))^2)
+brierScore5
+#0.094
+
+
+
+

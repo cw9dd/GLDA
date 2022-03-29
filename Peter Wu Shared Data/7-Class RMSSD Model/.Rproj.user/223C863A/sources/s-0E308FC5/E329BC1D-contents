@@ -1,0 +1,142 @@
+
+
+length(which(dat$cl7 == 1 & dat$nodx == 1)) #19 (23%) [no diagnosis = 30% overall]
+length(which(dat$cl7 == 1 & dat$sad == 1)) #35 (43%) [SAD = 33% overall]
+length(which(dat$cl7 == 1 & dat$panic == 1)) #8 (14%) [panic = 9% overall]
+length(which(dat$cl7 == 1 & dat$ptsd == 1)) #21 (23%) [PTSD = 20% overall]
+
+mean(dat$cl7hr, na.rm = T) # -0.25
+hist(dat$cl7hr)
+hist(dat$cl7rate[dat$cl7 == 1])
+max(dat$cl7rate[dat$cl7 == 1])
+
+#Within-person correlation of class 7 and HR is driven by HR SD and class 7 rate
+summary(lm(cl7hr ~ nodx + sex, dat)) #
+summary(lm(cl7hr ~ gad + dep + sad + ptsd + panic + sex, dat)) #
+summary(lm(cl7hr ~ hr + rsa + pep + nodx + sex, dat)) # HR [t = -2.32], R2 = 0.10
+summary(lm(cl7hr ~ sdhr + nodx + sex, dat)) #More variation predicts stronger correlation -- R2 = 0.18
+summary(lm(cl7hr ~ cl7rate + nodx + sex, dat)) #Greater frequency of class 7 predictions stronger correlation -- R2 = 0.10
+summary(lm(cl7hr ~ sdhr + cl7rate + nodx + sex, dat)) #Both effects are significant -- R2 = 0.23
+summary(lm(cl7hr ~ sdhr + cl7rate + gad + dep + sad + ptsd + panic + sex, dat)) # R2 = 0.26
+
+#Presence of class 7 has NO effect on correlation between RSA and HR
+summary(lm(hrrsa ~ hr + sdhr + cl7 + gad + dep + sad + ptsd + panic + sex, dat)) # cl7 [t = -6.19], R2 = 0.39
+
+#HR is predicted by intra- and inter-individual HR/RSA associations
+#Class 7 presence predicts higher HR
+summary(lm(hr ~ cl7 + hrrsa + rsa + clinical + sex, dat)) # R2 = 0.45
+summary(lm(hr ~ cl7 + hrrsa + rsa + gad + dep + sad + ptsd + panic + sex, dat)) # R2 = 0.46
+#Within class 7, this effect is unaffected by class 7-HR association
+summary(lm(hr ~ hrrsa + rsa + clinical + sex, dat, cl7 == 1)) # R2 = 0.29
+summary(lm(hr ~ cl7hr + hrrsa + rsa + clinical + sex, dat, cl7 == 1)) # R2 = 0.30
+
+#Although there is a significant effect for clinical status on HR change
+#This effect is fully mitigate by phys variables to follow
+summary(lm(hrslope ~ hr + clinical + sex, dat))# clinical [t = -2.89], R2 = 0.04
+
+#class 7 slope fully mediates clinical effect
+#Note: Class 7 slope accounts for far less variance in HR delta than CLass 5 slope (.76 to .24)
+summary(lm(hrslope ~ cl7slope + clinical + sex, dat, cl7 == 1)) # R2 = 0.27
+summary(lm(hrslope ~ cl7slope, dat, cl7 == 1)) # R2 = 0.24
+
+#HR-RSA correlation and RSA slope predict HR-delta
+#Only RSA slope is significant in those with Class 7
+#Class 7 provides incremental prediction above RSA slope
+summary(lm(hrslope ~ hrrsa + rsaslope + clinical + sex, dat)) # R2 = 0.44
+summary(lm(hrslope ~ hrrsa + rsaslope + clinical + sex, dat, cl7 == 1)) # R2 = 0.43
+summary(lm(hrslope ~ cl7slope + hrrsa + rsaslope + clinical + sex, dat, cl7 == 1)) # R2 = 0.47
+
+#For those with class 7, PEP slope significantly predicts HR-delta
+#For those without Class 7, PEP slope does not significantly affect HR-delta
+summary(lm(hrslope ~ rsaslope + pepslope + clinical + sex, dat, cl7 == 1))# R2 = 0.50
+summary(lm(hrslope ~ rsaslope + pepslope + clinical + sex, dat, cl7 == 0))# R2 = 0.41
+
+#HR-PEP correlation and PEP slope predict HR-delta [TWICE th effect for Class 5]
+#Accounting for either class 7 or Class 7 slope mitigates both effects entirely
+summary(lm(hrslope ~ hrpep + pepslope + clinical + sex, dat, cl7 == 1)) # R2 = 0.32
+summary(lm(hrslope ~ cl7slope + hrpep + pepslope + clinical + sex, dat, cl7 == 1)) # R2 = 0.39
+
+
+#PNS effects (i.e. RSA and down-regulatory effects of Class 7) are either enhanced by or fully-mediated by Class 5
+summary(lm(hrslope ~ hrrsa + scale(rsaslope, scale = F)*cl57 + clinical + sex, dat, cl7 == 1)) # R2 = 0.48
+summary(lm(hrslope ~ scale(rsaslope, scale = F)*cl57 + pepslope + clinical + sex, dat, cl7 == 1))# R2 = 0.54
+summary(lm(hrslope ~ scale(cl7slope, scale = F)*cl57 + hrpep + pepslope + clinical + sex, dat, cl7 == 1)) # R2 = 0.54
+#When both RSA and Class 7 slope BY CL57 interactions are in the model:
+#RSA is a main effect, the interaction is not significant
+#Class 7 slope interaction is significant, main effect is non-significant
+#Thus, Class 7 slope only reduces HR in those who also have Class 5
+summary(lm(hrslope ~ scale(cl7slope, scale = F)*cl57 + hrrsa + scale(rsaslope, scale = F)*cl57 + clinical + sex, dat, cl7 == 1)) # R2 = 0.56
+
+#Clinical participants exhibited significantly lower rates of Class 7
+summary(lm(cl7rate ~ clinical + study + sex, dat, cl7rate > 0.0)) # clinical [t = -4.73], R2 = 0.23 (20% of variance attributable to clinical status)
+summary(lm(scale(cl7rate) ~ scale(clinical) + study + sex, dat, cl7rate > 0.0)) # r = -0.49
+
+#Clinical status and HR (+) significantly predicted presence of Class 7
+summary(glm(cl7 ~ hr + clinical, dat, family = binomial)) # HR significant, Clinical significant
+
+
+#Class 7 is not as effective a PNS regulator as Class 5.
+#Class 5 reflects PNS predominance as does Class 7
+#However, Class 5 is the only low PNS class, all others are at or above the mean
+#Class 7 is one of two high PNS classes, with the other, Class 6 indicated by HIGH HR and increased SNS
+#Thus, the marker of PNS fitness is LOW RSA
+
+#SNS Predominance in Class 7:
+#PEP affects HR slope in those with Class 7 and not those with Class 5
+#R2 for HR-PEP correlation and PEP slope on HR-delta is twice as large in Class 7 compared to Class 5
+#However, the addition of Class 7 slope to the model does not meaningfully drive HR change
+
+#Evidence that, although PNS regulation is very rapid, regulatory effects may exist more clearly in the aggregate:
+#Class 6 provides evidence that HR can be elevated in the presence of SNS and PNS activation
+#Thus, regulatory effects of PNS may have to accrue or simply persist over time
+#In Class 5, PNS effects fully account for all SNS effects
+#The same is not true in Class 7 or in the non-Class 5 sample generally
+#Thus, Class 5 represents a more efficient, effective, or robust PNS regulatory system
+
+length(which(dat$cl6 == 1))
+# 65
+length(which(dat$cl6 == 1 & dat$cl7 == 1))
+# 33 [34% of Class 7, 51% of Class 6]
+length(which(dat$cl6 == 1 & dat$cl5 == 1))
+# 25 [31% of Class 5, 38% of Class 6]
+length(which(dat$cl6 == 1 & dat$cl7 == 1 & dat$cl5 == 1))
+# 12
+
+cl5_cl6_cl7 = dat$id[dat$cl5 == 1 & dat$cl6 == 1 & dat$cl7 == 1]
+
+#Are these interactions meaningful?
+summary(lm(hrslope ~ scale(cl7hr) * scale(cl7slope) + clinical + sex, dat)) #interaction t = 5.20
+summary(lm(cl7slope ~ scale(cl7hr) * scale(hrslope) + clinical + sex, dat)) #interaction t = 8.02
+
+
+class7 = dat$id[dat$cl7 == 1]
+sad_cl7 = dat$id[dat$cl7 == 1 & dat$sad == 1]
+ptsd_cl7 = dat$id[dat$cl7 == 1 & dat$ptsd == 1]
+study_cl7 = dat$id[dat$cl7 == 1 & dat$study == 'ptsd']
+
+cl7list = list(nalist$c005, nalist$c009, nalist$c013, nalist$c014, nalist$c005, nalist$c018, nalist$c021, nalist$c024, nalist$c025, nalist$c027,
+               nalist$c029, nalist$c031, nalist$c032, nalist$c036, nalist$c041, nalist$c045, nalist$c047, nalist$c053, nalist$c058, nalist$c063,
+               nalist$c065, nalist$c071, nalist$p004, nalist$p008, nalist$p012, nalist$p017, nalist$p019, nalist$p025, nalist$p030, nalist$p032,
+               nalist$p033, nalist$p040, nalist$p042, nalist$p044, nalist$p051, nalist$p052, nalist$p060, nalist$p061, nalist$p062, nalist$p063,
+               nalist$p068, nalist$p069, nalist$p070, nalist$p073, nalist$p078, nalist$p080, nalist$p084, nalist$p088, nalist$p094, nalist$p095,
+               nalist$p101, nalist$p104, nalist$p108, nalist$p110, nalist$p111, nalist$p117, nalist$p119, nalist$p126, nalist$p127, nalist$p130,
+               nalist$p134, nalist$p136, nalist$p139, nalist$p150, nalist$p151, nalist$p152, nalist$p154, nalist$p160, nalist$p161, nalist$p162,
+               nalist$p165, nalist$p167, nalist$p172, nalist$p181, nalist$p182, nalist$p186, nalist$p194, nalist$p198, nalist$p200, nalist$p205,
+               nalist$p212, nalist$p219, nalist$p220, nalist$p224, nalist$p225, nalist$p226, nalist$p228, nalist$p230, nalist$p234, nalist$p236,
+               nalist$p238, nalist$p239, nalist$p240, nalist$p241, nalist$p242, nalist$p244)
+
+names(cl7list) <- c("c005", "c009", "c013", "c014", "c005", "c018", "c021", "c024", "c025", "c027",
+                    "c029", "c031", "c032", "c036", "c041", "c045", "c047", "c053", "c058", "c063",
+                    "c065", "c071", "p004", "p008", "p012", "p017", "p019", "p025", "p030", "p032",
+                    "p033", "p040", "p042", "p044", "p051", "p052", "p060", "p061", "p062", "p063",
+                    "p068", "p069", "p070", "p073", "p078", "p080", "p084", "p088", "p094", "p095",
+                    "p101", "p104", "p108", "p110", "p111", "p117", "p119", "p126", "p127", "p130",
+                    "p134", "p136", "p139", "p150", "p151", "p152", "p154", "p160", "p161", "p162",
+                    "p165", "p167", "p172", "p181", "p182", "p186", "p194", "p198", "p200", "p205",
+                    "p212", "p219", "p220", "p224", "p225", "p226", "p228", "p230", "p234", "p236",
+                    "p238", "p239", "p240", "p241", "p242", "p244")
+
+
+for (i in 1:length(cl7list)){
+  cl7list[[i]]$cl7 = ifelse(cl7list[[i]]$bClass7 == 1, mean(cl7list[[i]]$hr, na.rm = T), NA)
+}

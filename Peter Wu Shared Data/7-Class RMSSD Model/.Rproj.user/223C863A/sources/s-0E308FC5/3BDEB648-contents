@@ -1,0 +1,21 @@
+
+library(psych)
+describe(dat)
+d = dat[,c(1,76)][order(-dat$cl5hr),]
+d = na.omit(d)
+
+
+#      id     cl5hr
+#191 p198 0.9134991
+#21  c028 0.8044561
+#25  c033 0.7955824
+#221 p242 0.7910065
+#40  c055 0.7782254
+#150 p140 0.7718800
+#103 p079 0.7626370
+#35  c048 0.7393511
+#62  p017 0.7020821
+
+summary(lm(nalist$p198$bClass5 ~ nalist$p198$hr + nalist$p198$rmssd + nalist$p198$pep)) #R2 = 0.853
+summary(lm(nalist$p198$bClass5 ~ nalist$p198$hr + nalist$p198$rmssd + nalist$p198$pep + nalist$p198$resp_rate + nalist$p198$resp_amp)) #R2 = 0.855
+summary(lm(nalist$p198$bClass5 ~ nalist$p198$hr + nalist$p198$rmssd + nalist$p198$pep + nalist$p198$sv + nalist$p198$co)) #R2 = 0.884

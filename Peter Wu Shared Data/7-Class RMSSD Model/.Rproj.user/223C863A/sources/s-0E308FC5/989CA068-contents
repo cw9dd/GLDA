@@ -1,0 +1,642 @@
+
+
+length(which(dat$cl5 == 1 & dat$nodx == 1)) #19 (23%) [no diagnosis = 30% overall]
+length(which(dat$cl5 == 1 & dat$sad == 1)) #35 (43%) [SAD = 33% overall]
+length(which(dat$cl5 == 1 & dat$panic == 1)) #11 (14%) [panic = 9% overall]
+length(which(dat$cl5 == 1 & dat$ptsd == 1)) #19 (23%) [PTSD = 20% overall]
+
+hist(dat$cl5hr)
+hist(dat$cl5rate[dat$cl5 == 1])
+max(dat$cl5rate[dat$cl5 == 1])
+
+dat$cl57 = ifelse(dat$cl5 == 1 & dat$cl7 == 1, 1, 0)
+
+#Average within-person correlation of HR and Class 5 presence is r = 0.53
+mean(dat$cl5hr, na.rm = T) # 0.53
+
+#Within-person correlation of Class 5 and HR is driven by HR SD and Class 5 rate
+#Correlation is lower in clinical overall, and specifically lower in SAD and Panic
+summary(lm(cl5hr ~ nodx + sex, dat)) # control [t = 2.28], male [t = 2.69]. R2 = 0.14
+summary(lm(cl5hr ~ gad + dep + sad + ptsd + panic + sex, dat)) #No significant effects for Dx, larger effect for sex, R2 = 0.17
+summary(lm(cl5hr ~ hr + rsa + pep + nodx + sex, dat)) #No effects of average phys, R2 = 0.14
+summary(lm(cl5hr ~ sdhr + nodx + sex, dat)) #More variation predicts stronger correlation -- R2 = 0.25
+summary(lm(cl5hr ~ cl5rate + nodx + sex, dat)) #Greater frequency of class 5 predictions stronger correlation -- R2 = 0.39
+summary(lm(cl5hr ~ sdhr + cl5rate + nodx + sex, dat)) #All effects are significant -- R2 = 0.49
+summary(lm(cl5hr ~ sdhr + cl5rate + gad + dep + sad + ptsd + panic + sex, dat)) #SAD [t = -2.44], Panic [t = -2.85] -- R2 = 0.54
+
+#Presence of Class 5 increases correlation between RSA and HR (effect size = r -0.23)
+summary(lm(hrrsa ~ hr + sdhr + cl5 + gad + dep + sad + ptsd + panic + sex, dat)) # cl5 [t = -6.19], R2 = 0.39
+summary(lm(hrrsa ~ scale(hr, scale = F) + scale(sdhr, scale = F) + scale(cl5, scale = F) + gad + dep + sad + ptsd + panic + sex, dat)) # cl5 [t = -6.19], R2 = 0.39
+
+#HR is predicted by intra- and inter-individual HR/RSA associations
+#Class 5 presence does not affect this relationship
+summary(lm(hr ~ cl5 + hrrsa + rsa + clinical + sex, dat)) # R2 = 0.44
+summary(lm(hr ~ cl5 + hrrsa + rsa + gad + dep + sad + ptsd + panic + sex, dat)) # R2 = 0.45
+#Within Class 5, this effect is unaffected by Class 5-HR association
+summary(lm(hr ~ hrrsa + rsa + clinical + sex, dat, cl5 == 1)) # R2 = 0.50
+summary(lm(hr ~ cl5hr + hrrsa + rsa + clinical + sex, dat, cl5 == 1)) # R2 = 0.50
+
+#Although there is a significant effect for clinical status on HR change
+#This effect is fully mitigate by phys variables to follow
+summary(lm(hrslope ~ hr + clinical + sex, dat))# clinical [t = -2.89], R2 = 0.04
+
+#Class 5 slope fully mediates clinical effect
+#Class 5 accounts for 76% of the variance in HR slope
+summary(lm(hrslope ~ cl5slope + clinical + sex, dat, cl5 == 1)) # R2 = 0.76
+summary(lm(hrslope ~ cl5slope, dat, cl5 == 1)) # R2 = 0.76
+
+#HR-RSA correlation and RSA slope predict HR-delta more strongly in those with Class 5
+#Accounting for Class 5 slope increases R2 14% and reduces HR-RSA effect by 40% (becomes non-significant)
+summary(lm(hrslope ~ hrrsa + rsaslope + clinical + sex, dat)) # R2 = 0.44
+summary(lm(hrslope ~ hrrsa + rsaslope + clinical + sex, dat, cl5 == 1)) # R2 = 0.68
+summary(lm(hrslope ~ cl5slope + hrrsa + rsaslope + clinical + sex, dat, cl5 == 1)) # R2 = 0.82
+summary(lm(hrslope ~ cl5slope + rsaslope + clinical + sex, dat, cl5 == 1)) # R2 = 0.81
+
+#RSA slope predicts HR-delta in Class 7
+#Class 7 slope provides incremental predictions (4% of variance)
+#This effect is only for those who also have Class 5 (N = 41)
+summary(lm(hrslope ~ hrrsa + rsaslope + clinical + sex, dat, cl7 == 1)) # R2 = 0.43
+summary(lm(hrslope ~ cl7slope + hrrsa + rsaslope + clinical + sex, dat, cl7 == 1)) # R2 = 0.47
+summary(lm(hrslope ~ scale(cl7slope, scale = F)*cl57 + hrrsa + rsaslope + clinical + sex, dat, cl7 == 1)) # R2 = 0.56
+
+#Both Class 5 and Class 7 slopes make independent contributions to HR-delta
+#Inclusion of both Class 5 and Class 7 slopes mitigates significance of RSA slope (but check degrees of freedom [N = 41])
+summary(lm(hrslope ~ cl5slope + cl7slope + rsaslope + clinical + sex, dat)) # R2 = 0.89
+
+#Do continuous RSA and PEP account for Class 5 and Class 7 effects?
+#Effect is substantially smaller, but contains those who do not have Class 5
+summary(lm(hrslope ~ rsaslope + pepslope + clinical + sex, dat))# R2 = 0.45
+
+#If we break up the sample we find that the effect is much stronger in those (vs. w/out) Class 5
+#We also see that PEP slope is a non-significant contributor to HR delta for those with Class 5
+#For those without Class 5, PEP slope significantly predicts HR delta
+#The clinical effect is also significant for those without Class 5 (mediated for those w/ Class 5)
+summary(lm(hrslope ~ rsaslope + pepslope + clinical + sex, dat, cl5 == 1))# R2 = 0.67
+summary(lm(hrslope ~ rsaslope + pepslope + clinical + sex, dat, cl5 == 0))# R2 = 0.32
+
+#HR-PEP correlation and PEP slope predict HR-delta
+#Accounting for Class 5 slope mitigates both effects entirely
+#Accounting for Class 7 slope does not
+summary(lm(hrslope ~ hrpep + pepslope + clinical + sex, dat, cl5 == 1)) # R2 = 0.16
+summary(lm(hrslope ~ cl5slope + hrpep + pepslope + clinical + sex, dat)) # R2 = 0.77
+summary(lm(hrslope ~ cl7slope + hrpep + pepslope + clinical + sex, dat)) # R2 = 0.39
+
+#No differences between clinical and controls in frequency of Class 5
+summary(lm(cl5rate ~ clinical + study + sex, dat, cl5rate > 0.0)) #
+
+#However, clinical participants exhibited significantly lower rates of Class 7
+summary(lm(cl7rate ~ clinical + study + sex, dat, cl7rate > 0.0)) # clinical [t = -4.73], R2 = 0.23 (20% of variance attributable to clinical status)
+summary(lm(scale(cl7rate) ~ scale(clinical) + study + sex, dat, cl7rate > 0.0)) # r = -0.49
+
+#Regarding *who* exhibited Class 5
+#It appears to be predicted by having a large range of HR
+#Where, range supersedes SD, MSSD, and mean (levels)
+#Also important, this effect is strengthened when controlling for slope + MSSD
+#Thus, the effect is neither recovery nor volatility, it is max to min
+summary(glm(cl5 ~ hrrange + sqrt(hrmssd) + hrslope + rsa + pep, dat, family = binomial)) # HR slope ONLY significant w/ range AND MSSD
+
+
+#Class 5 represents PNS withdrawal
+#Class 7 represents PNS inhibition/down-regulation
+#Results indicate, paradoxically, that PNS withdrawal dynamics dictate HR response over the course of the interview
+
+#Both Class 5 and Class 7 reflect PNS predominance
+#However, Class 5 is the only low PNS class, all others are at or above the mean
+#Class 7 is one of two high PNS classes, with the other, Class 6 indicated by HIGH HR and increased SNS
+#Thus, the marker of PNS fitness is LOW RSA
+
+#There is evidence for greater SNS Predominance in Class 7
+#PEP affects HR slope in those with Class 7 and not those with Class 5
+#R2 for HR-PEP correlation and PEP slope on HR-delta is twice as large in Class 7 compared to Class 5
+#However, the addition of Class 7 slope to the model does not meaningfully drive HR change
+
+#Evidence that, although PNS regulation is very rapid, regulatory effects may exist more clearly in the aggregate:
+#Class 6 provides evidence that HR can be elevated in the presence of SNS and PNS activation
+#Thus, regulatory effects of PNS may have to accrue or simply persist over time
+#In Class 5, PNS effects fully account for all SNS effects
+#The same is not true in Class 7 or in the non-Class 5 sample generally
+#Thus, Class 5 represents a more efficient, effective, or robust PNS regulatory system
+
+#Likely an argument that Class 5 is a "healthy" class
+#Over distribution of controls
+#Evidence of greater PNS predominance and cardiac control
+#Other evidence?
+
+
+#Are these interactions meaningful?
+summary(lm(hrslope ~ scale(cl5hr) * scale(cl5slope) + clinical + sex, dat)) #interaction t = -1.95
+summary(lm(cl5slope ~ scale(cl5hr) * scale(hrslope) + clinical + sex, dat)) #interaction t = 4.38
+
+
+class5 = dat$id[dat$cl5 == 1]
+sad_cl5 = dat$id[dat$cl5 == 1 & dat$sad == 1]
+ptsd_cl5 = dat$id[dat$cl5 == 1 & dat$ptsd == 1]
+study_cl5 = dat$id[dat$cl5 == 1 & dat$study == 'ptsd']
+
+cl5list = list(nalist$c001, nalist$c002, nalist$c009, nalist$c018, nalist$c021, nalist$c024, nalist$c028, nalist$c032, nalist$c033, nalist$c036,
+               nalist$c038, nalist$c039, nalist$c041, nalist$c044, nalist$c047, nalist$c048, nalist$c052, nalist$c053, nalist$c055, nalist$c057,
+               nalist$c058, nalist$c063, nalist$c065, nalist$c066, nalist$c071, nalist$c072, nalist$p002, nalist$p006, nalist$p007, nalist$p009,
+               nalist$p014, nalist$p017, nalist$p025, nalist$p027, nalist$p028, nalist$p030, nalist$p035, nalist$p036, nalist$p040, nalist$p042,
+               nalist$p045, nalist$p052, nalist$p058, nalist$p060, nalist$p061, nalist$p062, nalist$p065, nalist$p076, nalist$p079, nalist$p086,
+               nalist$p088, nalist$p090, nalist$p095, nalist$p098, nalist$p100, nalist$p119, nalist$p127, nalist$p128, nalist$p139, nalist$p140,
+               nalist$p153, nalist$p154, nalist$p159, nalist$p164, nalist$p167, nalist$p181, nalist$p192, nalist$p198, nalist$p202, nalist$p206,
+               nalist$p219, nalist$p224, nalist$p226, nalist$p228, nalist$p236, nalist$p237, nalist$p238, nalist$p239, nalist$p240, nalist$p241,
+               nalist$p242)
+
+names(cl5list) <- c("c001", "c002", "c009", "c018", "c021", "c024", "c028", "c032", "c033", "c036", "c038", "c039", "c041", "c044", "c047",
+                    "c048", "c052", "c053", "c055", "c057", "c058", "c063", "c065", "c066", "c071", "c072", "p002", "p006", "p007", "p009",
+                    "p014", "p017", "p025", "p027", "p028", "p030", "p035", "p036", "p040", "p042", "p045", "p052", "p058", "p060", "p061",
+                    "p062", "p065", "p076", "p079", "p086", "p088", "p090", "p095", "p098", "p100", "p119", "p127", "p128", "p139", "p140",
+                    "p153", "p154", "p159", "p164", "p167", "p181", "p192", "p198", "p202", "p206", "p219", "p224", "p226", "p228", "p236",
+                    "p237", "p238", "p239", "p240", "p241", "p242")
+
+
+for (i in 1:length(cl5list)){
+  cl5list[[i]]$cl5 = ifelse(cl5list[[i]]$bClass5 == 1, mean(cl5list[[i]]$hr, na.rm = T), NA)
+}
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p002.pdf')
+ggplot(data=cl5list$p002) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p006.pdf')
+ggplot(data=cl5list$p006) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p007.pdf')
+ggplot(data=cl5list$p007) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p009.pdf')
+ggplot(data=cl5list$p009) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p014.pdf')
+ggplot(data=cl5list$p014) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p017.pdf')
+ggplot(data=cl5list$p017) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p025.pdf')
+ggplot(data=cl5list$p025) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p027.pdf')
+ggplot(data=cl5list$p027) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p028.pdf')
+ggplot(data=cl5list$p028) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p030.pdf')
+ggplot(data=cl5list$p030) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p035.pdf')
+ggplot(data=cl5list$p035) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p036.pdf')
+ggplot(data=cl5list$p036) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p040.pdf')
+ggplot(data=cl5list$p040) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p042.pdf')
+ggplot(data=cl5list$p042) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p045.pdf')
+ggplot(data=cl5list$p045) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p052.pdf')
+ggplot(data=cl5list$p052) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p058.pdf')
+ggplot(data=cl5list$p058) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p060.pdf')
+ggplot(data=cl5list$p060) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p061.pdf')
+ggplot(data=cl5list$p061) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p062.pdf')
+ggplot(data=cl5list$p062) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p065.pdf')
+ggplot(data=cl5list$p065) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p076.pdf')
+ggplot(data=cl5list$p076) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p079.pdf')
+ggplot(data=cl5list$p079) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p086.pdf')
+ggplot(data=cl5list$p086) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p088.pdf')
+ggplot(data=cl5list$p088) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p090.pdf')
+ggplot(data=cl5list$p090) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p095.pdf')
+ggplot(data=cl5list$p095) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p098.pdf')
+ggplot(data=cl5list$p098) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p100.pdf')
+ggplot(data=cl5list$p100) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p119.pdf')
+ggplot(data=cl5list$p119) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p127.pdf')
+ggplot(data=cl5list$p127) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p128.pdf')
+ggplot(data=cl5list$p128) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p139.pdf')
+ggplot(data=cl5list$p139) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p140.pdf')
+ggplot(data=cl5list$p140) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p153.pdf')
+ggplot(data=cl5list$p153) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p154.pdf')
+ggplot(data=cl5list$p154) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p159.pdf')
+ggplot(data=cl5list$p159) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p164.pdf')
+ggplot(data=cl5list$p164) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p167.pdf')
+ggplot(data=cl5list$p167) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p181.pdf')
+ggplot(data=cl5list$p181) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p192.pdf')
+ggplot(data=cl5list$p192) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p198.pdf')
+ggplot(data=cl5list$p198) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p202.pdf')
+ggplot(data=cl5list$p202) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p206.pdf')
+ggplot(data=cl5list$p206) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p219.pdf')
+ggplot(data=cl5list$p219) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p224.pdf')
+ggplot(data=cl5list$p224) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p226.pdf')
+ggplot(data=cl5list$p226) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p228.pdf')
+ggplot(data=cl5list$p228) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p236.pdf')
+ggplot(data=cl5list$p236) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p237.pdf')
+ggplot(data=cl5list$p237) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p238.pdf')
+ggplot(data=cl5list$p238) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p239.pdf')
+ggplot(data=cl5list$p239) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p240.pdf')
+ggplot(data=cl5list$p240) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p241.pdf')
+ggplot(data=cl5list$p241) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/p242.pdf')
+ggplot(data=cl5list$p242) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c001.pdf')
+ggplot(data=cl5list$c001) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c002.pdf')
+ggplot(data=cl5list$c002) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c009.pdf')
+ggplot(data=cl5list$c009) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c018.pdf')
+ggplot(data=cl5list$c018) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c021.pdf')
+ggplot(data=cl5list$c021) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c024.pdf')
+ggplot(data=cl5list$c024) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c028.pdf')
+ggplot(data=cl5list$c028) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c032.pdf')
+ggplot(data=cl5list$c032) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c033.pdf')
+ggplot(data=cl5list$c033) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c036.pdf')
+ggplot(data=cl5list$c036) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c038.pdf')
+ggplot(data=cl5list$c038) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c039.pdf')
+ggplot(data=cl5list$c039) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c041.pdf')
+ggplot(data=cl5list$c041) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c044.pdf')
+ggplot(data=cl5list$c044) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c047.pdf')
+ggplot(data=cl5list$c047) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c048.pdf')
+ggplot(data=cl5list$c048) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c052.pdf')
+ggplot(data=cl5list$c052) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c053.pdf')
+ggplot(data=cl5list$c053) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c055.pdf')
+ggplot(data=cl5list$c055) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c057.pdf')
+ggplot(data=cl5list$c057) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c058.pdf')
+ggplot(data=cl5list$c058) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c063.pdf')
+ggplot(data=cl5list$c063) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c065.pdf')
+ggplot(data=cl5list$c065) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c066.pdf')
+ggplot(data=cl5list$c066) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c071.pdf')
+ggplot(data=cl5list$c071) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/Class 5 Plots/c072.pdf')
+ggplot(data=cl5list$c072) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5), col = rgb(1,0,0,1), lwd = 2)
+dev.off()

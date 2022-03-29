@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1567730695099.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3762910680",
+    "id" : "663B8FB0",
+    "lastKnownWriteTime" : 1567730893,
+    "last_content_update" : 1567730893232,
+    "path" : "C:/Users/afish/Dropbox/Lab/GAD_MDD_Trial/BRAT Special Issue/Analyses/Revision/P001/dat_extract.R",
+    "project_path" : "dat_extract.R",
+    "properties" : {
+        "cursorPosition" : "105,0",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

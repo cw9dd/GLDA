@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1567628659865.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2012221427",
+    "id" : "9A6F3120",
+    "lastKnownWriteTime" : 1565496531,
+    "last_content_update" : 1565496531,
+    "path" : "C:/Users/afish/Dropbox/Lab/GAD_MDD_Trial/BRAT Special Issue/Analyses/Revision/P001/revision_001.R",
+    "project_path" : "revision_001.R",
+    "properties" : {
+        "cursorPosition" : "181,0",
+        "scrollLine" : "159"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

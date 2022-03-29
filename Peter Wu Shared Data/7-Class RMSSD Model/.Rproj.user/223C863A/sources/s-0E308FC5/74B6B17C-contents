@@ -1,0 +1,318 @@
+
+cl5_cl7 = dat$id[dat$cl5 == 1 & dat$cl7 == 1]
+
+# "c009" "c018" "c021" "c024" "c032" "c036" "c041" "c047" "c053" "c058" "c063" "c065" "c071"
+# "p017" "p025" "p030" "p040" "p042" "p052" "p060" "p061" "p062" "p088" "p095" "p119" "p127"
+# "p139" "p154" "p167" "p181" "p198" "p219" "p224" "p226" "p228" "p236" "p238" "p239" "p240"
+# "p241" "p242"
+
+cl57list = list(nalist$c009, nalist$c018, nalist$c021, nalist$c024, nalist$c032, nalist$c036, nalist$c041, nalist$c047, nalist$c053, nalist$c058,
+               nalist$c063, nalist$c065, nalist$c071, nalist$p017, nalist$p025, nalist$p030, nalist$p040, nalist$p042, nalist$p052, nalist$p060,
+               nalist$p061, nalist$p062, nalist$p088, nalist$p095, nalist$p119, nalist$p127, nalist$p139, nalist$p154, nalist$p167, nalist$p181,
+               nalist$p198, nalist$p219, nalist$p224, nalist$p226, nalist$p228, nalist$p236, nalist$p238, nalist$p239, nalist$p240, nalist$p241,
+               nalist$p242)
+
+names(cl57list) <- c("c009", "c018", "c021", "c024", "c032", "c036", "c041", "c047", "c053", "c058",
+                    "c063", "c065", "c071", "p017", "p025", "p030", "p040", "p042", "p052", "p060",
+                    "p061", "p062", "p088", "p095", "p119", "p127", "p139", "p154", "p167", "p181",
+                    "p198", "p219", "p224", "p226", "p228", "p236", "p238", "p239", "p240", "p241",
+                    "p242")
+
+
+
+for (i in 1:length(cl57list)){
+  cl57list[[i]]$cl5mean = ifelse(cl57list[[i]]$bClass5 == 1, mean(cl57list[[i]]$hr, na.rm = T) + .5, NA)
+  cl57list[[i]]$cl7mean = ifelse(cl57list[[i]]$bClass7 == 1, mean(cl57list[[i]]$hr, na.rm = T) - .5, NA)
+}
+
+#rgb(red, green, blue, alpha)
+
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/c009.pdf')
+ggplot(data=cl57list$c009) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/c018.pdf')
+ggplot(data=cl57list$c018) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/c021.pdf')
+ggplot(data=cl57list$c021) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/c024.pdf')
+ggplot(data=cl57list$c024) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/c032.pdf')
+ggplot(data=cl57list$c032) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/c036.pdf')
+ggplot(data=cl57list$c036) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/c041.pdf')
+ggplot(data=cl57list$c041) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/c047.pdf')
+ggplot(data=cl57list$c047) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/c053.pdf')
+ggplot(data=cl57list$c053) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/c058.pdf')
+ggplot(data=cl57list$c058) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/c063.pdf')
+ggplot(data=cl57list$c063) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/c065.pdf')
+ggplot(data=cl57list$c065) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/c071.pdf')
+ggplot(data=cl57list$c071) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p017.pdf')
+ggplot(data=cl57list$p017) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p025.pdf')
+ggplot(data=cl57list$p025) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p030.pdf')
+ggplot(data=cl57list$p030) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p040.pdf')
+ggplot(data=cl57list$p040) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p042.pdf')
+ggplot(data=cl57list$p042) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p052.pdf')
+ggplot(data=cl57list$p052) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p060.pdf')
+ggplot(data=cl57list$p060) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p061.pdf')
+ggplot(data=cl57list$p061) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p062.pdf')
+ggplot(data=cl57list$p062) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p088.pdf')
+ggplot(data=cl57list$p088) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p095.pdf')
+ggplot(data=cl57list$p095) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p119.pdf')
+ggplot(data=cl57list$p119) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p127.pdf')
+ggplot(data=cl57list$p127) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p139.pdf')
+ggplot(data=cl57list$p139) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p154.pdf')
+ggplot(data=cl57list$p154) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p167.pdf')
+ggplot(data=cl57list$p167) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p181.pdf')
+ggplot(data=cl57list$p181) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p198.pdf')
+ggplot(data=cl57list$p198) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p219.pdf')
+ggplot(data=cl57list$p219) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p224.pdf')
+ggplot(data=cl57list$p224) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p226.pdf')
+ggplot(data=cl57list$p226) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p228.pdf')
+ggplot(data=cl57list$p228) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p236.pdf')
+ggplot(data=cl57list$p236) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p238.pdf')
+ggplot(data=cl57list$p238) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p239.pdf')
+ggplot(data=cl57list$p239) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p240.pdf')
+ggplot(data=cl57list$p240) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p241.pdf')
+ggplot(data=cl57list$p241) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+pdf('C:/Users/Aaron/Dropbox/Lab/Phys Data/FMM Project/Updated 5-Class Model/57 plots/p242.pdf')
+ggplot(data=cl57list$p242) +
+  geom_line(mapping=aes(x=time, y=hr)) +
+  geom_point(mapping=aes(x=time, y=cl5mean), col = rgb(1,0,0,1), lwd = 2)+
+  geom_point(mapping=aes(x=time, y=cl7mean), col = rgb(0,0,1,1), lwd = 2)
+dev.off()
+
+

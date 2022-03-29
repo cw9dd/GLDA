@@ -1,0 +1,21 @@
+
+set.seed(1234)
+regL1=cv.glmnet(matL1.1,trainL0$hopeless,family='gaussian',standardize=T,alpha=.5)
+coefL1=coef(regL1, s = "lambda.min")
+coefL1
+
+predL1=predict.cv.glmnet(regL1, newx=matL1.1, s = "lambda.min", type = "link")
+(cor.test(predL1, trainL0$hopeless)$estimate)^2
+
+predL1=predict.cv.glmnet(regL1, newx=matL1.2, s = "lambda.min", type = "link")
+(cor.test(predL1, testL0$hopeless)$estimate)^2
+
+pROC::auc(pROC::roc(testL0$class1~testL0$regpred1))
+#0.79
+pROC::coords((pROC::roc(testL0$class1~testL0$regpred1)),"best", ret=c("threshold", "specificity", "sensitivity"), transpose=FALSE)
+#  threshold specificity sensitivity 
+#  -0.8027981   0.7916667   0.8333333
+pred.prob1 <- predict.cv.glmnet(regL1, newx=matL1.2, s = "lambda.min", type = "response")
+brierScore1 <- mean((pred.prob1-as.numeric(as.character(testL0$class1)))^2)
+brierScore1
+#0.193

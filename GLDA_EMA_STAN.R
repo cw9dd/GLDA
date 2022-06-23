@@ -96,9 +96,6 @@ names(data.centered)[3:12]
 fit_rstan %>% mcmc_trace()
 
 library(mvtnorm)
-for (m in 1:45) {
-  m <- 1
-}
 
 theta <- apply(extract(fit_rstan)$theta[1:800, ,], c(2,3), mean) # M=45 by K=3 
 mu <- apply(extract(fit_rstan)$mu[1:800, ,], c(2,3), mean) # K=3 by V=10
@@ -110,7 +107,7 @@ theta.glda <- as.data.frame(theta) %>% `colnames<-`(factor(rank(avg), labels = c
 
 m <- 1
 data.centered.post <- data.centered %>% 
-  mutate(m = sapply(1:nrow(data.centered), function(x) which(pids == data.centered$pid[x]))) %>% 
+  mutate(m = as.integer(factor(data.centered$pid))) %>% 
   mutate(post.1 = dmvnorm(data.centered[, 3:12], mean = mu[1, ], sigma = sigma[1, ,], log = FALSE) * theta[m, 1]) %>% 
   mutate(post.2 = dmvnorm(data.centered[, 3:12], mean = mu[2, ], sigma = sigma[2, ,], log = FALSE) * theta[m, 2]) %>%
   mutate(post.3 = dmvnorm(data.centered[, 3:12], mean = mu[3, ], sigma = sigma[3, ,], log = FALSE) * theta[m, 3]) %>%
@@ -140,8 +137,8 @@ pids.26 <- data.centered.post %>% select(pid, time, post.1:post.3, glda.cl) %>% 
 ggplot(pids.26, aes(x = time, y = as.integer(glda.cl))) + theme_bw() +
   geom_point() +
   geom_path() +
-  labs(title = "Participant No.26") + 
-  scale_y_continuous(name = "GLDA-inferred Discrete State", breaks = 1:3, labels = c("low", "med", "high")) +
+  #labs(title = "Participant No.26") + 
+  scale_y_continuous(name = "GLDA-inferred Discrete State", breaks = 1:3, labels = c("well", "mid", "unwell")) +
   scale_x_datetime(name = "Time", minor_breaks = NULL, breaks = c(seq(as.POSIXct("2015-10-06"), as.POSIXct("2015-11-01"), 3600*24), seq(as.POSIXct("2015-11-02"), as.POSIXct("2015-12-03"), 3600*24))) + 
   theme(axis.text = element_text(size = 12), 
         axis.title.x = element_text(size = 14), #, face = "bold"),
@@ -241,8 +238,8 @@ for (n in 1:n_chains) {
   colnames(mu.df.all)[n+2] <- paste0("V", n)
 }
 
-mu.df.all <- mu.df.all %>% rowwise() %>%
-  mutate(max = max(V1, V2, V3), min = min(V1, V2, V3), mean = sum(V1, V2, V3)/3) %>% as.data.frame()
+# this line is for when running multiple chains' result
+# mu.df.all <- mu.df.all %>% rowwise() %>% mutate(max = max(V1, V2, V3), min = min(V1, V2, V3), mean = sum(V1, V2, V3)/3) %>% as.data.frame()
 
 mu.df.all
 
@@ -250,15 +247,17 @@ mu.df.all
 # lines(mu[which(avg == min(avg)), ], ylim= c(-1,1), col = "red")
 # lines(mu[which(avg > min(avg) & avg < max(avg)), ], ylim= c(-1,1), col = "blue")
 
-ggplot(mu.df.all, aes(x = as.numeric(index), color = as.factor(variable))) + theme_bw() +
-  geom_line(aes(y = mean), size = 1)  +
-  geom_ribbon(aes(ymin = min, ymax = max, fill = as.factor(variable)), color = NA,  alpha = 0.2) +
+# glda mu, dataset 1 in paper (saved this plot); used linetype as opposed to color to differentiate considering potential color blindedness of readers
+ggplot(mu.df.all, aes(x = as.numeric(index), linetype = as.factor(variable))) + theme_bw() +
+  geom_line(aes(y = V1), size = 1)  +
+  # geom_ribbon(aes(ymin = min, ymax = max, fill = as.factor(variable)), color = NA,  alpha = 0.2) +
   scale_x_continuous(breaks = 1:10, labels = names(data.centered)[3:12], name = "EMA item") +
-  scale_y_continuous(breaks = seq(-1,1,0.1), name = "normalized value") +
+  scale_y_continuous(breaks = seq(-1.5,1,0.1), limits = c(-1, 0.7), name = "Z-score") +
   #scale_color_manual(values = c("#00AFBB", "#E7B800", "#FC4E07")) +
-  scale_color_discrete(name = "cluster", limits = c("high", "low", "med")) +
-  theme(panel.grid.minor.x = element_blank(), legend.position = "none",
-        axis.text=element_text(size=12), axis.title.x=element_text(size=14,face="bold"), axis.title.y=element_text(size=14))
+  scale_linetype_manual(values = c(1,3,2)) +
+  theme(panel.grid.minor.x = element_blank(), legend.position = "none", axis.text.y = element_text(size =12),
+        axis.text.x=element_text(size=12,angle = 45, vjust = 1, hjust = 1), axis.title.x=element_blank(), 
+        axis.title.y=element_text(size=14))
 
 data.frame(truth %>% select(pid = id),
            weight.low = round(as.numeric(fit_summary[which(grepl(paste0("theta\\[\\d*,", which(factor(rank(avg), labels = c("low", "med", "high")) == "low"), "\\]"), rownames(fit_summary))), "mean"]), 3),
@@ -293,16 +292,16 @@ ggplot(training, aes(x = low, y = high)) + theme_bw() +
 training
 
 # depression scores
-summary(lm(hrsd ~ high, data = training %>% select(low, med, high, hrsd))) # the best model is the one using only the weight of the high cluster; med is also significant, low is not; hamilton rating scale for depression
+summary(lm(hrsd ~ low, data = training %>% select(low, med, high, hrsd))) # the best model is the one using only the weight of the high cluster; med is also significant, low is not; hamilton rating scale for depression
 summary(lm(dassd ~ high, data = training %>% select(low, med, high, dassd))) # depression anxiety stress scale -depression; med is NOT significant, neither is low; p = 0.011
 
 # anxiety scores
-summary(lm(hama ~ high, data = training %>% select(low, med, high, hama))) # best model is high; med is NOT significant, neither is low; hamilton anxiety scale; p = 0.014
+summary(lm(hama ~ low, data = training %>% select(low, med, high, hama))) # best model is high; med is NOT significant, neither is low; hamilton anxiety scale; p = 0.014
 summary(lm(dassa ~ high, data = training %>% select(low, med, high, dassa))) # depression anxiety stress scale -anxiety; med is NOT significant, neither is low; p=0.0587
 summary(lm(gadqtotal ~ high, data = training %>% select(low, med, high, gadqtotal))) # general anxiety disorder; not significant
 
 # stress
-summary(lm(dasss ~ high, data = training %>% select(low, med, high, dasss))) # depression anxiety stress scale -stress;  med is NOT significant, neither is low; p = 0.007!!
+summary(lm(dasss ~ low, data = training %>% select(low, med, high, dasss))) # depression anxiety stress scale -stress;  med is NOT significant, neither is low; p = 0.007!!
 
 # misc
 summary(lm(pswqtotal ~ high, data = training %>% select(low, med, high, pswqtotal))) # penn state worry questionnaire; high is barely significant; p = 0.0496
@@ -324,38 +323,57 @@ mu.df <- as.data.frame(mu) %>%
   mutate(index = factor(1:10)) %>% melt()
 
 mu.df
+# saveRDS(mu.df, "gmm_mu_dataset1.rds")
+# mu.df <- readRDS("gmm_mu_dataset1.rds")
 
 # plot(mu[which(avg == max(avg)), ], ylim= c(-1,1), type = "l")
 # lines(mu[which(avg == min(avg)), ], ylim= c(-1,1), col = "red")
 # lines(mu[which(avg > min(avg) & avg < max(avg)), ], ylim= c(-1,1), col = "blue")
 
-ggplot(mu.df, aes(x = as.numeric(index), y = value, color = variable)) + theme_bw() + geom_line(size = 1) +
+# gmm mu, dataset 1 in paper (saved this plot 400*600)
+ggplot(mu.df, aes(x = as.numeric(index), linetype = as.factor(variable))) + theme_bw() +
+  geom_line(aes(y = value), size = 1)  +
+  # geom_ribbon(aes(ymin = min, ymax = max, fill = as.factor(variable)), color = NA,  alpha = 0.2) +
   scale_x_continuous(breaks = 1:10, labels = names(data.centered)[3:12], name = "EMA item") +
-  scale_y_continuous(breaks = seq(-1,1,0.1), name = "normalized value") +
-  scale_color_manual(values = c("#00AFBB", "#E7B800", "#FC4E07")) +
-  scale_color_discrete(name = "cluster", limits = c("high", "med", "low")) +
-  theme(panel.grid.minor.x = element_blank(), legend.position = "none")
+  scale_y_continuous(breaks = seq(-1.5,1,0.1), limits = c(-1, 0.7), name = "Z-score") +
+  #scale_color_manual(values = c("#00AFBB", "#E7B800", "#FC4E07")) +
+  scale_linetype_manual(values = c(2,3,1)) +
+  theme(panel.grid.minor.x = element_blank(), legend.position = "none", axis.text.y = element_text(size =12),
+        axis.text.x=element_text(size=12,angle = 45, vjust = 1, hjust = 1), axis.title.x=element_blank(), 
+        axis.title.y=element_text(size=14)) # save at width 400 height 600
+
+# ggplot(mu.df, aes(x = as.numeric(index), y = value, color = variable)) + theme_bw() + geom_line(size = 1) +
+#   scale_x_continuous(breaks = 1:10, labels = names(data.centered)[3:12], name = "EMA item") +
+#   scale_y_continuous(breaks = seq(-1,1,0.1), name = "normalized value") +
+#   scale_color_manual(values = c("#00AFBB", "#E7B800", "#FC4E07")) +
+#   scale_color_discrete(name = "cluster", limits = c("high", "med", "low")) +
+#   theme(panel.grid.minor.x = element_blank(), legend.position = "none")
 
 theta.gmm <- data.centered %>% mutate(cluster = gmm$classification) %>% group_by(pid) %>%
-  summarize(low = length(which(cluster == 3))/n(), med = length(which(cluster == 1))/n(), high = length(which(cluster == 2))/n()) %>% as.data.frame()
-
+  summarize(low = length(which(cluster == 2))/n(), med = length(which(cluster == 1))/n(), high = length(which(cluster == 3))/n()) %>% as.data.frame() # adjust the gmm cluster index after inspecting the mu values, make sure they are aligned
 
 training.gmm <- data.frame(data.centered %>% mutate(cluster = gmm$classification) %>% group_by(pid) %>%
-                         summarize(low = length(which(cluster == 3))/n(), med = length(which(cluster == 1))/n(), high = length(which(cluster == 2))/n()) %>% as.data.frame(),
+                         summarize(low = length(which(cluster == 2))/n(), med = length(which(cluster == 1))/n(), high = length(which(cluster == 3))/n()) %>% as.data.frame(),
                        truth %>% select(hrsd, hama, dassd, dassa, dasss, gadqtotal, pswqtotal, neon, neoe, neoo, neoa, neoc))
 training.gmm
 
 # depression scores
 summary(lm(hrsd ~ high, data = training.gmm %>% select(low, med, high, hrsd))) # far from significant
+summary(lm(hrsd ~ med, data = training.gmm %>% select(low, med, high, hrsd))) # far from significant
+summary(lm(hrsd ~ low, data = training.gmm %>% select(low, med, high, hrsd))) # far from significant
 summary(lm(dassd ~ high, data = training.gmm %>% select(low, med, high, dassd))) # far from significant
 
 # anxiety scores
 summary(lm(hama ~ high, data = training.gmm %>% select(low, med, high, hama))) # far from significant
+summary(lm(hama ~ med, data = training.gmm %>% select(low, med, high, hama))) # far from significant
+summary(lm(hama ~ low, data = training.gmm %>% select(low, med, high, hama))) # far from significant
 summary(lm(dassa ~ high, data = training.gmm %>% select(low, med, high, dassa))) # far from significant
 summary(lm(gadqtotal ~ high, data = training.gmm %>% select(low, med, high, gadqtotal))) # far from significant
 
 # stress
 summary(lm(dasss ~ high, data = training.gmm %>% select(low, med, high, dasss))) # p =0.087 bordering getting significant
+summary(lm(dasss ~ med, data = training.gmm %>% select(low, med, high, dasss))) # p =0.087 bordering getting significant
+summary(lm(dasss ~ low, data = training.gmm %>% select(low, med, high, dasss))) # p =0.087 bordering getting significant
 
 # Compare with Fisher and Bosley's two-step GMM manipulation to get inter-participant comparison
 
@@ -559,7 +577,8 @@ ggplot(mu.for.plot, aes(x = item, y = value, color = cluster)) + theme_bw() +
         axis.text=element_text(size=12), axis.title.x=element_text(size=14,face="bold"), axis.title.y=element_text(size=14))
 
 epds <- read.csv(paste0(data.path.kaya, "EPDS_moms.csv"))
-
+# epds[11,2] <- 0 # use the other score for P11 
+# epds[18,2] <- 5 # use the other score for P21 (both P11 and P21 answered EPDS twice at different points)
 theta.truth <- epds %>% mutate(pid = substr(PID, 1, 3), epds = EPDS) %>% select(pid, epds) %>% inner_join(theta.glda, by = "pid")
 
 summary(lm("epds~ high", data = theta.truth)) # not at all significant
